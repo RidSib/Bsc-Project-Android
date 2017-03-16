@@ -46,6 +46,7 @@ import java.util.concurrent.Semaphore;
 
 import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
 import com.apps.ridvan.smartgatekeeper.services.MyService;
+import com.apps.ridvan.smartgatekeeper.utils.HttpHelper;
 import com.apps.ridvan.smartgatekeeper.utils.NetworkHelper;
 import com.apps.ridvan.smartgatekeeper.utils.RequestPackage;
 import com.google.gson.Gson;
@@ -382,7 +383,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
             String json = "{\"login\": \"" + mEmail + "\", \"password\": \"" + mPassword + "\"}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
             Request request = new Request.Builder()
@@ -390,6 +391,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     .post(body)
                     .build();
             System.out.println(request.toString());
+
             try (Response response = client.newCall(request).execute()) {
                 if (response.isSuccessful()) {
                     Gson gson = new Gson();
