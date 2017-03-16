@@ -38,12 +38,16 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
+import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
 import com.apps.ridvan.smartgatekeeper.services.MyService;
 import com.apps.ridvan.smartgatekeeper.utils.NetworkHelper;
 import com.apps.ridvan.smartgatekeeper.utils.RequestPackage;
+import com.google.gson.Gson;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -62,6 +66,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private String url = "";
     private String name = "";
     private String FILE_NAME = "local_data_file";
+    private Semaphore mutex = new Semaphore(1);
     /**
      * Id to identity READ_CONTACTS permission request.
      */
@@ -93,7 +98,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         //start of loginFile reading
         try {
             BufferedReader bReader = new BufferedReader(new InputStreamReader(openFileInput(FILE_NAME)));
-            String line;
             if ((url = bReader.readLine()) != null) {
                 name = bReader.readLine();
             }
@@ -112,22 +116,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.main_login_form);
 
-        if (fileExists) {
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            TextView urlName = new TextView(this);
-            urlName.setText(url);
-            urlName.setLayoutParams(params);
-            urlName.setTextSize(20);
-            TextView loginName = new TextView(this);
-            loginName.setText(name);
-            loginName.setLayoutParams(params);
-            loginName.setTextSize(20);
-            linearLayout.addView(urlName, 0);
-            linearLayout.addView(loginName, 1);
-        }
-
-        mLoginView = (AutoCompleteTextView) findViewById(R.id.user_login);
         mURLView = (AutoCompleteTextView) findViewById(R.id.input_url);
+        mLoginView = (AutoCompleteTextView) findViewById(R.id.user_login);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -152,6 +142,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        if (fileExists) {
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            TextView urlName = new TextView(this);
+            urlName.setText(url);
+            urlName.setLayoutParams(params);
+            urlName.setTextSize(20);
+            TextView loginName = new TextView(this);
+            loginName.setText(name);
+            loginName.setLayoutParams(params);
+            loginName.setTextSize(20);
+            linearLayout.addView(urlName, 0);
+            linearLayout.addView(loginName, 1);
+            mURLView.setVisibility(View.INVISIBLE);
+            mLoginView.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void populateAutoComplete() {
@@ -247,8 +253,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(localUrl, email, password);
-            mAuthTask.execute((Void) null);
+            try {
+                mutex.acquire();
+                mAuthTask = new UserLoginTask(localUrl, email, password);
+                mAuthTask.execute((Void) null);
+                mutex.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (((GlobalValues) getApplication()).getFunctionList().equals(null)) {
+                Toast.makeText(this, "Login failed!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 //            try {
 //                int resp = post(localUrl, "{\"login\": \"" + email + "\", \"password\": \"" + password + "\"}");
 //                if (resp > 299) {
@@ -263,6 +279,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //                e.printStackTrace();
 //                Toast.makeText(this, "Login failed!", Toast.LENGTH_SHORT).show();
 //            }
+            Intent intent = new Intent(LoginActivity.this, FunctionsActivity.class);
+            startActivity(intent);
         }
     }
 
@@ -393,11 +411,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     .build();
             System.out.println(request.toString());
             try (Response response = client.newCall(request).execute()) {
-                return response.code() > 299;
+                if (response.isSuccessful()) {
+                    Gson gson = new Gson();
+                    String respondBody = response.body().string();
+                    System.out.println(respondBody);
+                    GlobalValues global = (GlobalValues) getApplication();
+                    global.setFunctionList(gson.fromJson(respondBody, FunctionListData.class));
+                    global.setLogin(mEmail);
+                    global.setPassword(mPassword);
+                }
+                mutex.release();
+                return response.isSuccessful();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return true;
+            return false;
         }
 
         @Override
@@ -417,41 +445,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         protected void onCancelled() {
             mAuthTask = null;
             showProgress(false);
-        }
-    }
-
-    private void loadPage() {
-        Intent intent = new Intent(this, MyService.class);
-        intent.setData(Uri.parse(url));
-        startService(intent);
-    }
-
-    int post(String url, String json) throws IOException {
-        OkHttpClient client = new OkHttpClient();
-        RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        System.out.println(request.toString());
-        try (Response response = client.newCall(request).execute()) {
-            return response.code();
-        }
-    }
-
-    public void runClickHandler(View view) {
-
-        if (networkOk) {
-            RequestPackage requestPackage = new RequestPackage();
-            requestPackage.setEndPoint(url);
-            requestPackage.setParam("test", "test");
-            requestPackage.setMethod("POST");
-
-            Intent intent = new Intent(this, MyService.class);
-            intent.putExtra(MyService.REQUEST_PACKAGE, requestPackage);
-            startService(intent);
-        } else {
-            Toast.makeText(this, "Network not available!", Toast.LENGTH_SHORT).show();
         }
     }
 }

@@ -40,7 +40,7 @@ public class HttpHelper {
                 builder.addFormDataPart(key, params.get(key));
             }
             RequestBody requestBody = builder.build();
-            //requestBody.method("POST", requestBody);
+            requestBuilder.method("POST", requestBody);
         }
 
         Request request = requestBuilder.build();
