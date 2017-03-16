@@ -11,6 +11,7 @@ import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
 public class GlobalValues extends Application {
 
     private FunctionListData functionList;
+    private String url;
     private String login;
     private String password;
 
@@ -36,5 +37,13 @@ public class GlobalValues extends Application {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

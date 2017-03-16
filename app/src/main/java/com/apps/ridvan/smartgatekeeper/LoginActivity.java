@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -63,8 +64,6 @@ import static android.Manifest.permission.READ_CONTACTS;
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
     private boolean networkOk;
-    private String url = "";
-    private String name = "";
     private String FILE_NAME = "local_data_file";
     private Semaphore mutex = new Semaphore(1);
     /**
@@ -94,17 +93,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        boolean fileExists = false;
         //start of loginFile reading
-        try {
-            BufferedReader bReader = new BufferedReader(new InputStreamReader(openFileInput(FILE_NAME)));
-            if ((url = bReader.readLine()) != null) {
-                name = bReader.readLine();
-            }
-            fileExists = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         // end of loginFile reading
         networkOk = NetworkHelper.hasNetworkAccess(this);
         if (!networkOk) {
@@ -114,7 +104,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.main_login_form);
 
         mURLView = (AutoCompleteTextView) findViewById(R.id.input_url);
         mLoginView = (AutoCompleteTextView) findViewById(R.id.user_login);
@@ -142,21 +131,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
-        if (fileExists) {
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            TextView urlName = new TextView(this);
-            urlName.setText(url);
-            urlName.setLayoutParams(params);
-            urlName.setTextSize(20);
-            TextView loginName = new TextView(this);
-            loginName.setText(name);
-            loginName.setLayoutParams(params);
-            loginName.setTextSize(20);
-            linearLayout.addView(urlName, 0);
-            linearLayout.addView(loginName, 1);
-            mURLView.setVisibility(View.INVISIBLE);
-            mLoginView.setVisibility(View.INVISIBLE);
+        try {
+            BufferedReader bReader = new BufferedReader(new InputStreamReader(openFileInput(FILE_NAME)));
+            String url;
+            if ((url = bReader.readLine()) != null) {
+                mURLView.setText(url);
+                mLoginView.setText(bReader.readLine());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -261,24 +244,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            mutex.release();
             if (((GlobalValues) getApplication()).getFunctionList().equals(null)) {
                 Toast.makeText(this, "Login failed!", Toast.LENGTH_SHORT).show();
                 return;
             }
-//            try {
-//                int resp = post(localUrl, "{\"login\": \"" + email + "\", \"password\": \"" + password + "\"}");
-//                if (resp > 299) {
-//                    throw new IOException();
-//                }
-//                FileOutputStream fos = openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
-//                fos.write(localUrl.getBytes());
-//                fos.write(System.getProperty("line.separator").getBytes());
-//                fos.write(password.getBytes());
-//                fos.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                Toast.makeText(this, "Login failed!", Toast.LENGTH_SHORT).show();
-//            }
+            try {
+                FileOutputStream fos = openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
+                fos.write(localUrl.getBytes());
+                fos.write(System.getProperty("line.separator").getBytes());
+                fos.write(email.getBytes());
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Could not save user information!", Toast.LENGTH_SHORT).show();
+            }
             Intent intent = new Intent(LoginActivity.this, FunctionsActivity.class);
             startActivity(intent);
         }
@@ -419,6 +399,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     global.setFunctionList(gson.fromJson(respondBody, FunctionListData.class));
                     global.setLogin(mEmail);
                     global.setPassword(mPassword);
+                    global.setUrl(mUrl.replace("login", "activity"));
                 }
                 mutex.release();
                 return response.isSuccessful();
