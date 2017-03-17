@@ -138,6 +138,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if ((url = bReader.readLine()) != null) {
                 mURLView.setText(url);
                 mLoginView.setText(bReader.readLine());
+                mPasswordView.requestFocus();
             }
         } catch (IOException e) {
             e.printStackTrace();

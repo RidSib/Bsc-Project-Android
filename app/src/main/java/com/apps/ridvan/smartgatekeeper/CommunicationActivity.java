@@ -1,6 +1,9 @@
 package com.apps.ridvan.smartgatekeeper;
 
+import android.app.Activity;
+import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -12,8 +15,7 @@ import android.view.WindowManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CommunicationActivity extends AppCompatActivity implements MediaPlayer.OnPreparedListener, SurfaceHolder.Callback {
-    private String RTSP_URL;
+public class CommunicationActivity extends Activity implements MediaPlayer.OnPreparedListener, SurfaceHolder.Callback {
     private GlobalValues gValues;
     private MediaPlayer _mediaPlayer;
     private SurfaceHolder _surfaceHolder;
@@ -22,7 +24,6 @@ public class CommunicationActivity extends AppCompatActivity implements MediaPla
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gValues = (GlobalValues) getApplication();
-        RTSP_URL = gValues.getUrl();
         // Set up a full-screen black window.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window window = getWindow();
@@ -38,40 +39,46 @@ public class CommunicationActivity extends AppCompatActivity implements MediaPla
                 (SurfaceView) findViewById(R.id.surfaceView);
         _surfaceHolder = surfaceView.getHolder();
         _surfaceHolder.addCallback(this);
-        _surfaceHolder.setFixedSize(320, 240);
+        //_surfaceHolder.setFixedSize(320, 240);
     }
 
-    private Map<String, String> getRtspHeaders() {
-        Map<String, String> headers = new HashMap<String, String>();
-        //String basicAuthValue = getBasicAuthValue(USERNAME, PASSWORD);
-        //headers.put("Authorization", basicAuthValue);
-        return headers;
+    @Override
+    public void surfaceChanged(
+            SurfaceHolder sh, int f, int w, int h) {}
+
+    @Override
+    public void surfaceCreated(SurfaceHolder sh) {
+        _mediaPlayer = new MediaPlayer();
+        _mediaPlayer.setDisplay(_surfaceHolder);
+
+        Context context = getApplicationContext();
+        String url = gValues.getUrl().substring(0,gValues.getUrl().lastIndexOf(":")+1);
+        url+="8081/favicon.ico";
+
+        url = url.replace("https", "http");
+        Uri source = Uri.parse(url);
+        System.out.println(url);
+        try {
+            // Specify the IP camera's URL and auth headers.
+            _mediaPlayer.setDataSource(context, source);
+
+            // Begin the process of setting up a video stream.
+            _mediaPlayer.setOnPreparedListener(this);
+            _mediaPlayer.prepareAsync();
+        }
+        catch (Exception e) {}
     }
 
-    private String getBasicAuthValue(String usr, String pwd) {
-        String credentials = usr + ":" + pwd;
-        int flags = Base64.URL_SAFE | Base64.NO_WRAP;
-        byte[] bytes = credentials.getBytes();
-        return "Basic " + Base64.encodeToString(bytes, flags);
+    @Override
+    public void surfaceDestroyed(SurfaceHolder sh) {
+        _mediaPlayer.release();
     }
 
+    /*
+MediaPlayer.OnPreparedListener
+*/
     @Override
     public void onPrepared(MediaPlayer mp) {
         _mediaPlayer.start();
-    }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-
     }
 }

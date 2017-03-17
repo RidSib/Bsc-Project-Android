@@ -1,5 +1,6 @@
 package com.apps.ridvan.smartgatekeeper;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import com.apps.ridvan.smartgatekeeper.model.Function;
 import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
+import com.apps.ridvan.smartgatekeeper.utils.HttpHelper;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -65,6 +67,10 @@ public class FunctionsActivity extends AppCompatActivity {
             mutex.acquire();
             if(isSuccessful){
                 Toast.makeText(this, "Function "+function.getName()+" has activated!", Toast.LENGTH_SHORT).show();
+                if(function.getType()==2){
+                    Intent intent = new Intent(FunctionsActivity.this, CommunicationActivity.class);
+                    startActivity(intent);
+                }
             } else {
                 Toast.makeText(this, "Function "+function.getName()+" has failed!", Toast.LENGTH_SHORT).show();
             }
@@ -79,7 +85,7 @@ public class FunctionsActivity extends AppCompatActivity {
 
         @Override
         protected Boolean doInBackground(String... params) {
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
             String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + ", \"function\": " + params[3] + "}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
             Request request = new Request.Builder()
