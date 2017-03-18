@@ -26,10 +26,7 @@ public class MjpegInputStream extends DataInputStream {
         Response res;
         OkHttpClient client = new OkHttpClient();
         try {
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
+            Request request = new Request.Builder().url(url).build();
             res = client.newCall(request).execute();
             return new MjpegInputStream(res.body().byteStream());
         } catch (IOException e) {
