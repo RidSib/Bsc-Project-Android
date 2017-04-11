@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -48,49 +49,60 @@ public class CommunicationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_communication);
-        gValues = (GlobalValues) getApplication();
-        streamView = (VideoView) findViewById(R.id.streamview);
-        playStream();
-
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_communication);
+            gValues = (GlobalValues) getApplication();
+            streamView = (VideoView) findViewById(R.id.streamview);
+            playStream();
+            isSuccessful = false;
+            FunctionListData fList = gValues.getFunctionList();
+            LinearLayout linearLayout = (LinearLayout) findViewById(R.id.stream_linear_form);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            ArrayList<Button> buttonList = new ArrayList<>();
+            for (final Function function : fList.getFunctions()) {
+                if (function.getType() == 2)
+                    continue;
+                Button b = new Button(this);
+                b.setLayoutParams(params);
+                b.setText(function.getName());
+                linearLayout.addView(b);
+                buttonList.add(b);
+                b.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        functionCall(function);
+                    }
+                });
+            }
+            Button back = (Button) findViewById(R.id.back_button);
+            back.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    functionCall(null);
+                }
+            });
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void playStream() {
-        String url = gValues.getUrl().substring(0, gValues.getUrl().lastIndexOf(":") + 1);
-        url += "8090/";
-        url = url.replace("https", "http");
+        String url = "http://"+gValues.getUrl()+":8090/";
         Uri UriSrc = Uri.parse(url);
+        Log.d("PlayStream", "URI being set");
         streamView.setVideoURI(UriSrc);
+        Log.d("PlayStream", "URI set");
         mediaController = new MediaController(this);
         streamView.setMediaController(mediaController);
-        streamView.start();
-        RelativeLayout parentLayout = (RelativeLayout) findViewById(R.id.stream_form);
-        isSuccessful = false;
-        FunctionListData fList = gValues.getFunctionList();
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.stream_linear_form);
-        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        ArrayList<Button> buttonList = new ArrayList<>();
-        for (final Function function : fList.getFunctions()) {
-            if (function.getType() == 2)
-                continue;
-            Button b = new Button(this);
-            b.setLayoutParams(params);
-            b.setText(function.getName());
-            linearLayout.addView(b);
-            buttonList.add(b);
-            b.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    functionCall(function);
-                }
-            });
-        }
-        Button back = (Button) findViewById(R.id.back_button);
-        back.setOnClickListener(new View.OnClickListener() {
+        Log.d("PlayStream", "setting up listener");
+        streamView.setOnPreparedListener(new MediaPlayer.OnPreparedListener()
+        {
             @Override
-            public void onClick(View view) {
-                functionCall(null);
+            public void onPrepared(MediaPlayer mp)
+            {
+                Log.d("PlayStream", "starting to play");
+                streamView.start();
             }
         });
     }
@@ -116,7 +128,7 @@ public class CommunicationActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Function " + function.getName() + " has failed!", Toast.LENGTH_SHORT).show();
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         mutex.release();

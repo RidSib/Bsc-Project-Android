@@ -88,8 +88,9 @@ public class FunctionsActivity extends AppCompatActivity {
             OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
             String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + ", \"function\": " + params[3] + "}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
+            String url = "https://"+params[0]+":5000/api/json/activity";
             Request request = new Request.Builder()
-                    .url(params[0])
+                    .url(url)
                     .post(body)
                     .build();
             System.out.println(request.toString());

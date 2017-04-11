@@ -90,12 +90,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private GlobalValues global;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //start of loginFile reading
-
+        global = (GlobalValues) getApplication();
         // end of loginFile reading
         networkOk = NetworkHelper.hasNetworkAccess(this);
         if (!networkOk) {
@@ -247,7 +248,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 e.printStackTrace();
             }
             mutex.release();
-            if (((GlobalValues) getApplication()).getFunctionList().equals(null)) {
+            if (global == null || global.getFunctionList() == null) {
                 Toast.makeText(this, "Login failed!", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -380,6 +381,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mUrl = lUrl;
             mEmail = email;
             mPassword = password;
+
         }
 
         @Override
@@ -387,6 +389,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
             String json = "{\"login\": \"" + mEmail + "\", \"password\": \"" + mPassword + "\"}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
+            String url = "https://"+mUrl+":5000/api/json/login";
             Request request = new Request.Builder()
                     .url(mUrl)
                     .post(body)
@@ -397,19 +400,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 if (response.isSuccessful()) {
                     Gson gson = new Gson();
                     String respondBody = response.body().string();
-                    System.out.println(respondBody);
-                    GlobalValues global = (GlobalValues) getApplication();
                     global.setFunctionList(gson.fromJson(respondBody, FunctionListData.class));
                     global.setLogin(mEmail);
                     global.setPassword(mPassword);
-                    global.setUrl(mUrl.replace("login", "activity"));
+                    global.setUrl(url);
                 }
                 mutex.release();
                 return response.isSuccessful();
             } catch (IOException e) {
+                mutex.release();
                 e.printStackTrace();
+                return false;
             }
-            return false;
         }
 
         @Override
