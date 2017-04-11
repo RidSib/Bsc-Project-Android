@@ -391,7 +391,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
             String url = "https://"+mUrl+":5000/api/json/login";
             Request request = new Request.Builder()
-                    .url(mUrl)
+                    .url(url)
                     .post(body)
                     .build();
             System.out.println(request.toString());
@@ -403,7 +403,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     global.setFunctionList(gson.fromJson(respondBody, FunctionListData.class));
                     global.setLogin(mEmail);
                     global.setPassword(mPassword);
-                    global.setUrl(url);
+                    global.setUrl(mUrl);
                 }
                 mutex.release();
                 return response.isSuccessful();
