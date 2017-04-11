@@ -2,23 +2,20 @@ package com.apps.ridvan.smartgatekeeper;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.apps.ridvan.smartgatekeeper.model.Function;
 import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
 import com.apps.ridvan.smartgatekeeper.utils.HttpHelper;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 
 import okhttp3.MediaType;

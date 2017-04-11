@@ -3,53 +3,45 @@ package com.apps.ridvan.smartgatekeeper;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
-
+import android.content.Context;
 import android.content.CursorLoader;
+import android.content.Intent;
 import android.content.Loader;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
+import com.apps.ridvan.smartgatekeeper.utils.HttpHelper;
+import com.apps.ridvan.smartgatekeeper.utils.NetworkHelper;
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
-
-import com.apps.ridvan.smartgatekeeper.model.FunctionListData;
-import com.apps.ridvan.smartgatekeeper.services.MyService;
-import com.apps.ridvan.smartgatekeeper.utils.HttpHelper;
-import com.apps.ridvan.smartgatekeeper.utils.NetworkHelper;
-import com.apps.ridvan.smartgatekeeper.utils.RequestPackage;
-import com.google.gson.Gson;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -83,6 +75,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
+
+    public AutoCompleteTextView getmURLView() {
+        return mURLView;
+    }
+
+    public AutoCompleteTextView getmLoginView() {
+        return mLoginView;
+    }
+
+    public EditText getmPasswordView() {
+        return mPasswordView;
+    }
 
     // UI references.
     private AutoCompleteTextView mURLView;
@@ -195,7 +199,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() {
+    public void attemptLogin() {
         if (mAuthTask != null) {
             return;
         }
