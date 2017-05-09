@@ -399,7 +399,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     .post(body)
                     .build();
             System.out.println(request.toString());
-
+            System.out.println(json);
             try (Response response = client.newCall(request).execute()) {
                 if (response.isSuccessful()) {
                     Gson gson = new Gson();
@@ -408,6 +408,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     global.setLogin(mEmail);
                     global.setPassword(mPassword);
                     global.setUrl(mUrl);
+                } else {
+                    global.setFunctionList(null);
                 }
                 mutex.release();
                 return response.isSuccessful();
@@ -426,8 +428,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if (success) {
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                //mPasswordView.setError(getString(R.string.error_incorrect_password));
+                //mPasswordView.requestFocus();
             }
         }
 

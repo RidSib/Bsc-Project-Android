@@ -24,7 +24,7 @@ public class FunctionTest {
     @Test
     public void successfulFunction() throws Exception {
         OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
-        String json = "{\"login\": \"" + email + "\", \"password\": \"" + password + ", \"function\": 0}";
+        String json = "{\"login\": \"" + email + "\", \"password\": \"" + password + ", \"function\": 1}";
         RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
         String url = "https://"+urlStr+":5000/api/json/activity";
         Request request = new Request.Builder()
@@ -32,6 +32,7 @@ public class FunctionTest {
                 .post(body)
                 .build();
         try (Response response = client.newCall(request).execute()) {
+            System.out.println(response);
             assert (response.isSuccessful());
         }
     }

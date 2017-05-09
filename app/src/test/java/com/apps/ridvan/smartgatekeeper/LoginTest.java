@@ -43,6 +43,7 @@ public class LoginTest {
             String respondBody = response.body().string();
             FunctionListData fList = (gson.fromJson(respondBody, FunctionListData.class));
             assertNotEquals(null, fList);
+            System.out.println(response);
         }
     }
 
@@ -58,11 +59,13 @@ public class LoginTest {
                 .build();
         FunctionListData fList = null;
         try (Response response = client.newCall(request).execute()) {
+            System.out.println(response);
             assert(response.isSuccessful());
             Gson gson = new Gson();
             String respondBody = response.body().string();
              fList = (gson.fromJson(respondBody, FunctionListData.class));
             assertEquals(null, fList);
+            System.out.println(response);
         } catch (Exception e){
             assertEquals(null, fList);
         }

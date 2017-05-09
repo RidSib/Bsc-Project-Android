@@ -1,28 +1,17 @@
 package com.apps.ridvan.smartgatekeeper;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -140,10 +129,11 @@ public class CommunicationActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(String... params) {
             OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
-            String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + ", \"function\": " + params[3] + "}";
+            String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + "\", \"function\": " + params[3] + "}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
+            String url = "https://"+params[0]+":5000/api/json/activity";
             Request request = new Request.Builder()
-                    .url(params[0])
+                    .url(url)
                     .post(body)
                     .build();
             System.out.println(request.toString());

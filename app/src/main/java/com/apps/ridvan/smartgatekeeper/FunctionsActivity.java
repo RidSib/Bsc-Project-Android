@@ -83,7 +83,7 @@ public class FunctionsActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(String... params) {
             OkHttpClient client = HttpHelper.getUnsafeOkHttpClient();
-            String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + ", \"function\": " + params[3] + "}";
+            String json = "{\"login\": \"" + params[1] + "\", \"password\": \"" + params[2] + "\", \"function\": " + params[3] + "}";
             RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
             String url = "https://"+params[0]+":5000/api/json/activity";
             Request request = new Request.Builder()
@@ -93,6 +93,7 @@ public class FunctionsActivity extends AppCompatActivity {
             System.out.println(request.toString());
             System.out.println(json);
             try (Response response = client.newCall(request).execute()) {
+                System.out.println(response);
                 isSuccessful=true;
                 mutex.release();
                 return response.isSuccessful();
