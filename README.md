@@ -4,4 +4,6 @@ This project is an IoT based application with the aim of controlling a door stri
 The app allows you to log in to a server to unlock the door or view the camera feed.
 
 You can find the server sided application under: [Gatekeeper-Flask](https://github.com/RidSib/Gatekeeper-Flask)
+
+## Application screenshots
 ![app](Capture.JPG)
